@@ -1,0 +1,128 @@
+version: "3.8"
+
+services:
+  # APPLICATION
+  app:
+    image: nextcloud:latest
+    container_name: nextcloud-app
+    ports:
+      - "8080:80"
+    depends_on: # Wait for the database and redis containers before starting nextcloud
+      - db
+      - redis
+    volumes:
+      - ./html:/var/www/html                      # Mount html folder, needed for updating
+      - ./custom:/var/www/html/custom_apps        # Mount for installed/modified app
+      - ./data:/var/www/html/data                 # Mount actual data stored in nextcloud to the local space
+      - ./config:/var/www/html/config             # Mount config directory for persistence
+      - ./external:/external                      # Mount optional external folder for later on adding external storage
+      - ./jellyfin:/jellyfin                      # Mount Jellyfin for media access
+      - ./nextcloud-init.sh:/nextcloud-init.sh
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=<db_name>
+      - MYSQL_USER=<db_username>
+      - MYSQL_PASSWORD=<db_password>
+      - REDIS_HOST=redis # The redis container to use
+      - NEXTCLOUD_ADMIN_USER=<username>
+      - NEXTCLOUD_ADMIN_PASSWORD=<password>
+      - PUID=1000                   # User ID for permission
+      - PGID=1001                   # Group ID for permission
+    # The entrypoint custom script set for bypassing the .ncdata error faced, when the server restarts
+    entrypoint: ['/bin/bash', '/nextcloud-init.sh']
+    restart: unless-stopped
+    networks:
+      - cloud
+
+  # MARIA DATABASE
+  db:
+    image: mariadb:latest
+    container_name: nextcloud-db
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      - PUID=1000                   # User ID for permission
+      - PGID=1000                   # Group ID for permission
+      - TZ=Asia/Kolkata
+      - MYSQL_ROOT_PASSWORD=<db_root_password>
+      - MYSQL_DATABASE=<db_name>
+      - MYSQL_USER=<db_username>
+      - MYSQL_PASSWORD=<db_password>
+    volumes:
+      - ./db:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - cloud
+
+  # REDIS
+  redis:
+    image: redis:alpine
+    container_name: redis
+    volumes:
+      - ./redis:/data
+    networks:
+      - cloud
+    restart: 'unless-stopped'
+
+  # JellyFin
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    ports:
+      - "8096:8096"                 # Jellyfin web access port
+    environment:
+      - PUID=1000                   # User ID for permission
+      - PGID=1000                   # Group ID for permission
+      - TZ=Asia/Kolkata
+    networks:
+      - cloud
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - type: bind
+        source: ./jellyfin/media
+        target: /media
+    restart: 'unless-stopped'
+
+  # SHOKO SERVER
+  shoko:
+    image: ghcr.io/shokoanime/server:latest
+    container_name: shoko_server
+    shm_size: 256m
+    restart: 'unless-stopped'
+    ports:
+      - "8111:8111"                 # Jellyfin web access port
+    environment:
+      - PUID=1000                   # User ID for permission
+      - PGID=1000                   # Group ID for permission
+      - TZ=Asia/Kolkata
+    networks:
+      - cloud
+    volumes:
+      - "./shoko/config:/home/shoko/.shoko"
+      - "./jellyfin/media/anime:/media/anime"  # Path for anime files
+
+
+  # NGINX
+  nginx-proxy:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+# Network
+networks:
+  cloud:
+    name: cloud
+    driver: bridge
