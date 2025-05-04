@@ -1,0 +1,27 @@
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    hostname: pihole                                      # Set the hostname for pihole
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Kolkata                                   # Set your timezone
+      - FTLCONF_webserver_api_password=<YOUR_PASSWORD>    # Set the web interface password
+      - DNS1=8.8.8.8                                      # Primary DNS server (Google DNS)
+      - DNS2=8.8.4.4                                      # Secondary DNS server (Google DNS)
+    volumes:
+      - './etc-pihole/:/etc/pihole/'                      # Persistent Pi-hole data
+      - './etc-dnsmasq.d/:/etc/dnsmasq.d/'                # Persistent DNSMasq data
+    networks:
+      pihole_macvlan:
+        ipv4_address: <YOUR_IP>                           # Pick your desired IP
+    cap_add:
+      - NET_ADMIN                                         # Allow network administration
+      - SYS_TIME                                          # Allow time adjustments
+    dns:
+      - 127.0.0.1                                         # Use the Pi-hole container's own DNS server
+      - 8.8.8.8                                           # Use Google's DNS as a fallback
+
+networks:
+  pihole_macvlan:
+    external: true
