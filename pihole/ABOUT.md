@@ -1,6 +1,6 @@
-# 🧱 Pi-hole Docker Setup with Macvlan Networking
+# 🧱 Pi-hole & Unbound Docker Setup with Macvlan Networking
 
-This project sets up [Pi-hole](https://pi-hole.net/) using Docker Compose with a `macvlan` network, allowing your Pi-hole instance to behave like a separate device on your local network — perfect for network-wide ad blocking.
+This project sets up [Pi-hole](https://pi-hole.net/) with [Unbound](https://github.com/NLnetLabs/unbound) using Docker Compose with a `macvlan` network, allowing your Pi-hole instance to behave like a separate device on your local network — perfect for network-wide ad blocking.
 
 ---
 
@@ -14,6 +14,9 @@ This project sets up [Pi-hole](https://pi-hole.net/) using Docker Compose with a
 └── etc-dnsmasq.d/          # Persistent DNSMasq config
 ```
 
+You can utilize volume for unbound as well for custom configurations.
+
+
 ---
 
 ## ⚙️ Prerequisites
@@ -26,7 +29,7 @@ This project sets up [Pi-hole](https://pi-hole.net/) using Docker Compose with a
 
 ## 🛠️ Setup Instructions
 
-1. **Edit the `setup.sh` file** to set your desired interface name (replace `ens32` if needed):
+1. **Edit the `pihole.sh` file** to set your desired interface name (replace `ens32` if needed by checking your interface using `ifconfig`):
 
    ```bash
    -o parent=ens32 \
@@ -56,6 +59,14 @@ Key details from `docker-compose.yml`:
 * **Network**: Static IP `<your_ip>` on the `pihole_macvlan` network
 
 Make sure this IP is free on your network and doesn't conflict with other devices.
+
+---
+
+## ⚙️ Without Unbound
+
+To not utilize Unbound with Pi-hole and simply use Google or Cloudflare or someother DNS you can very easily 
+* Remove the unbound service from the `docker-compose.yml`
+* Update Environment DNS1 and DNS2 to your preferred DNS
 
 ---
 
