@@ -41,7 +41,7 @@ Each service is self-contained. To get started with one (e.g., Pi-hole):
 
 ```bash
 cd pihole
-./pihole.sh
+./setup.sh
 ```
 
 
