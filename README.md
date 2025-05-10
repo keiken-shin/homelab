@@ -15,6 +15,7 @@ Each service in this repo lives in its own directory with all the files needed f
 |-------------------|-----------------------------------------|--------------------------|
 | `pihole/`         | Network-wide ad blocker using Pi-hole, configured with macvlan for isolated networking | [📄 ABOUT.md](./pihole/ABOUT.md) |
 | `nextcloud/`      | Nextcloud provides a self-hosted file sync and share platform, giving you complete control over your data. | [📄 ABOUT.md](./nextcloud/ABOUT.md) |
+| `jellyfin/`      | Jellyfin lets you collect, organize, and stream your media to any device. | [📄 ABOUT.md](./jellyfin/ABOUT.md) |
 
 > 🔄 More directories and services will be added as the lab evolves.
 
