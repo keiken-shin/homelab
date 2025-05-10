@@ -1,3 +1,9 @@
+secrets
+
 # Pi-hole Volumes
 etc-pihole
 etc-dnsmasq.d
+
+# Nextcloud
+db_data
+nextcloud_data

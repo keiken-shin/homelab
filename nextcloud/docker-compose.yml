@@ -1,0 +1,82 @@
+# Secrets for Nextcloud app and MariaDB
+secrets:
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+  mysql_password:
+    file: ./secrets/mysql_password.txt
+  mysql_user:
+    file: ./secrets/mysql_user.txt
+  mysql_database:
+    file: ./secrets/mysql_database.txt
+  nextcloud_admin_user:
+    file: ./secrets/nextcloud_admin_user.txt
+  nextcloud_admin_password:
+    file: ./secrets/nextcloud_admin_password.txt
+
+services:
+  # MariaDB service
+  db:
+    image: mariadb:10.6
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      - ./db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
+      - MYSQL_USER_FILE=/run/secrets/mysql_user
+      - MYSQL_DATABASE_FILE=/run/secrets/mysql_database
+    secrets:
+      - mysql_root_password
+      - mysql_password
+      - mysql_user
+      - mysql_database
+    networks:
+      - stream-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Nextcloud service
+  app:
+    image: nextcloud:latest
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - ./nextcloud_data:/var/www/html                                            # Persistent storage for Nextcloud data
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
+      - MYSQL_USER_FILE=/run/secrets/mysql_user
+      - MYSQL_DATABASE_FILE=/run/secrets/mysql_database
+      - NEXTCLOUD_ADMIN_USER_FILE=/run/secrets/nextcloud_admin_user
+      - NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/nextcloud_admin_password
+      - NEXTCLOUD_TRUSTED_DOMAINS=localhost 192.168.1.x                           # Replace with your server's IP
+    secrets:
+      - mysql_password
+      - mysql_user
+      - mysql_database
+      - nextcloud_admin_user
+      - nextcloud_admin_password
+    networks:
+      - stream-network
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/status.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  stream-network:
+    external: true
+
+volumes:
+  db_data:
+  nextcloud_data:
