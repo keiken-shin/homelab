@@ -1,0 +1,26 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    restart: always
+    volumes:
+      - ./jellyfin_config:/config                                       # Configuration files
+      - ./jellyfin_cache:/cache                                         # Cache for faster access
+      - ./jellyfin_data:/media                                          # Persistent storage for media files
+    ports:
+      - "8096:8096"                                                     # HTTP port
+      - "8920:8920"                                                     # HTTPS port
+      - "7359:7359/udp"                                                 # Service discovery
+      - "1900:1900/udp"                                                 # DLNA discovery
+    networks:
+      - stream-network
+    environment:
+      - JELLYFIN_PublishedServerUrl=http://192.168.1.x  # Replace with your server's IP address
+
+networks:
+  stream-network:
+    external: true
+
+volumes:
+  jellyfin_config:
+  jellyfin_cache:
+  jellyfin_data:

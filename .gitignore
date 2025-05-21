@@ -1,0 +1,14 @@
+secrets
+
+# Pi-hole Volumes
+etc-pihole
+etc-dnsmasq.d
+
+# Nextcloud
+db_data
+nextcloud_data
+
+# Jellyfin
+jellyfin_cache
+jellyfin_config
+jellyfin_data
